@@ -9,74 +9,50 @@
  * file that was distributed with this source code.
  *
  * @author Daniel González <daniel@desarrolla2.com>
+ * @author Arnold Daniels <arnold@jasny.net>
  */
 
 namespace Desarrolla2\Cache;
 
+use Psr\SimpleCache\CacheInterface as PsrCacheInterface;
+use Desarrolla2\Cache\Packer\PackerInterface;
+use Desarrolla2\Cache\KeyMaker\KeyMakerInterface;
+
 /**
  * CacheInterface
  */
-interface CacheInterface
+interface CacheInterface extends PsrCacheInterface
 {
     /**
-     * Delete a value from the cache
+     * Set option for cache
      *
      * @param string $key
+     * @param mixed $value
+     * @return static
      */
-    public function delete($key);
+    public function withOption(string $key, $value);
 
     /**
-     * Retrieve the value corresponding to a provided key
+     * Set multiple options for cache
+     *
+     * @param array $options
+     * @return static
+     */
+    public function withOptions(array $options);
+
+    /**
+     * Get option for cache
      *
      * @param string $key
+     * @return mixed
      */
-    public function get($key);
+    public function getOption($key);
 
     /**
+     * Set the packer
      *
-     * @return \Desarrolla2\Cache\Adapter\AdapterInterface $adapter
-     * @throws Exception
+     * @param PackerInterface $packer
+     * @return static
      */
-    public function getAdapter();
-
-    /**
-     * Retrieve the if value corresponding to a provided key exist
-     *
-     * @param string $key
-     */
-    public function has($key);
-
-    /**
-     * * Add a value to the cache under a unique key
-     *
-     * @param string $key
-     * @param mixed  $value
-     * @param int    $ttl
-     */
-    public function set($key, $value, $ttl = null);
-
-    /**
-     * Set Adapter interface
-     *
-     * @param \Desarrolla2\Cache\Adapter\AdapterInterface $adapter
-     */
-    public function setAdapter(\Desarrolla2\Cache\Adapter\AdapterInterface $adapter);
-
-    /**
-     * Set option for Adapter
-     *
-     * @param string $key
-     * @param string $value
-     */
-    public function setOption($key, $value);
-
-    /**
-     * clean all expired records from cache
-     */
-    public function clearCache();
-
-    /**
-     * clear all cache
-     */
-    public function dropCache();
+    public function withPacker(PackerInterface $packer);
 }

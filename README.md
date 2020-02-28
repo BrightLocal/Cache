@@ -1,191 +1,172 @@
-# Cache
+# Desarolla2 Cache
 
-A simple cache library. Implements different adapters that you can use and change 
-easily by a manager or similar.
+A **simple cache** library, implementing the [PSR-16](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-16-simple-cache.md) standard using **immutable** objects.
 
-[![Build Status](https://secure.travis-ci.org/desarrolla2/Cache.png)](http://travis-ci.org/desarrolla2/Cache) [![Scrutinizer Quality Score](https://scrutinizer-ci.com/g/desarrolla2/Cache/badges/quality-score.png?s=940939c8d0bf2056188455594f4332a002a968c2)](https://scrutinizer-ci.com/g/desarrolla2/Cache/) [![Code Coverage](https://scrutinizer-ci.com/g/desarrolla2/Cache/badges/coverage.png?s=16037142f461dcfdfd6ad57561e231881252197b)](https://scrutinizer-ci.com/g/desarrolla2/Cache/)
+![life-is-hard-cache-is](https://user-images.githubusercontent.com/100821/41566888-ecd60cde-735d-11e8-893f-da42b2cd65e7.jpg)
 
-[![Latest Stable Version](https://poser.pugx.org/desarrolla2/cache/v/stable.png)](https://packagist.org/packages/desarrolla2/cache) [![Total Downloads](https://poser.pugx.org/desarrolla2/cache/downloads.png)](https://packagist.org/packages/desarrolla2/cache)
+Caching is typically used throughout an applicatiton. Immutability ensure that modifying the cache behaviour in one
+location doesn't result in unexpected behaviour due to changes in unrelated code.
 
+_Desarolla2 Cache aims to be the most complete, correct and best performing PSR-16 implementation available._
+
+[![Latest version][ico-version]][link-packagist]
+[![Latest version][ico-pre-release]][link-packagist]
+[![Software License][ico-license]][link-license]
+[![Build Status][ico-travis]][link-travis]
+[![Coverage Status][ico-coveralls]][link-coveralls]
+[![Quality Score][ico-code-quality]][link-code-quality]
+[![Sensiolabs Insight][ico-sensiolabs]][link-sensiolabs]
+[![Total Downloads][ico-downloads]][link-downloads]
+[![Today Downloads][ico-today-downloads]][link-downloads]
+[![Gitter][ico-gitter]][link-gitter]
 
 
 ## Installation
 
-### With Composer
-
-It is best installed it through [packagist](http://packagist.org/packages/desarrolla2/cache) 
-by including `desarrolla2/cache` in your project composer.json require:
-
-``` json
-    "require": {
-        // ...
-        "desarrolla2/cache":  "dev-master"
-    }
 ```
-
-### Without Composer
-
-You can also download it from [Github] (https://github.com/desarrolla2/Cache), 
-but no autoloader is provided so you'll need to register it with your own PSR-0 
-compatible autoloader.
+composer require desarrolla2/cache
+```
 
 ## Usage
 
 
 ``` php
-<?php
+use Desarrolla2\Cache\Memory as Cache;
 
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\NotCache;
+$cache = new Cache();
 
-$cache = new Cache(new NotCache());
+$value = $cache->get('key');
 
-$cache->set('key', 'myKeyValue', 3600);
+if (!isset($value)) {
+    $value = do_something(); 
+    $cache->set('key', $value, 3600);
+}
 
-// later ...
-
-echo $cache->get('key');
-
+echo $value;
 ```
 
 ## Adapters
 
-### NotCache
+* [Apcu](docs/implementations/apcu.md)
+* [File](docs/implementations/file.md)
+* [Memcached](docs/implementations/memcached.md)
+* [Memory](docs/implementations/memory.md)
+* [MongoDB](docs/implementations/mongodb.md)
+* [Mysqli](docs/implementations/mysqli.md)
+* [NotCache](docs/implementations/notcache.md)
+* [PhpFile](docs/implementations/phpfile.md)
+* [Predis](docs/implementations/predis.md)
 
-Use it if you will not implement any cache adapter is an adapter that will serve 
-to fool the test environments.
+The following implementation allows you to combine cache adapters.
 
-### File
+* [Chain](docs/implementations/chain.md)
 
-Use it if you will you have dont have other cache system available in your system
-or if you like to do your code more portable.
+[Other implementations][todo-implementations] are planned. Please vote or
+provide a PR to speed up the process of adding the to this library.
 
-``` php
-<?php
-    
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\File;
+[todo-implementations]: https://github.com/desarrolla2/Cache/issues?q=is%3Aissue+is%3Aopen+label%3Aadapter
 
-$cacheDir = '/tmp';
-$adapter = new File($cacheDir);
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
+### Options
 
-```
+You can set options for cache using the `withOption` or `withOptions` method.
+Note that all cache objects are immutable, setting an option creates a new
+object.
 
-### Apc
+#### TTL
 
-Use it if you will you have APC cache available in your system.
+All cache implementations support the `ttl` option. This sets the default
+time (in seconds) that cache will survive. It defaults to one hour (3600
+seconds).
 
-``` php
-<?php
-    
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\Apc;
+Setting the TTL to 0 or a negative number, means the cache should live forever.
 
-$adapter = new Apc();
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
+## Methods
 
-```
+Each cache implementation has the following `Psr\SimpleCache\CacheInterface`
+methods:
 
-### Memory
+##### `get(string $key [, mixed $default])`
+Retrieve the value corresponding to a provided key
 
-This is the fastest cache type, since the elements are stored in memory. 
-Cache Memory such is very volatile and is removed when the process terminates.
-Also it is not shared between different processes.
+##### `has(string $key)`
+Retrieve the if value corresponding to a provided key exist
 
-Memory cache have a option "limit", that limit the max items in cache.
+##### `set(string $key, mixed $value [, int $ttl])`
+Add a value to the cache under a unique key
 
-``` php
-<?php
-    
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\Memory;
+##### `delete(string $key)`
+Delete a value from the cache
 
-$adapter = new Memory();
-$adapter->setOption('ttl', 3600);
-$adapter->setOption('limit', 200);
-$cache = new Cache($adapter);
+##### `clear()`
+Clear all cache
 
-```
+##### `getMultiple(array $keys)`
+Obtains multiple cache items by their unique keys
 
-### Mongo
+##### `setMultiple(array $values [, int $ttl])`
+Persists a set of key => value pairs in the cache
 
-Use it if you will you have mongodb available in your system.
+##### `deleteMultiple(array $keys)`
+Deletes multiple cache items in a single operation
 
-``` php
-<?php
-    
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\Mongo;
+.
 
-$server = 'mongodb://localhost:27017';
-$adapter = new Mongo($server);
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
+The `Desarrolla2\Cache\CacheInterface` also has the following methods:
 
-```
+##### `withOption(string $key, string $value)`
+Set option for implementation. Creates a new instance.
 
-### MySQL
+##### `withOptions(array $options)`
+Set multiple options for implementation. Creates a new instance.
 
-Use it if you will you have mysqlnd available in your system.
+##### `getOption(string $key)`
+Get option for implementation.
 
-``` php
-<?php
 
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\MySQL;
+## Packers
 
-$adapter = new MySQL('localhost', 'user', 'pass', 'port');
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
+Cache objects typically hold a `Desarrolla2\Cache\Packer\PackerInterface`
+object. By default, packing is done using `serialize` and `unserialize`.
 
-```
+Available packers are:
 
-### Redis
+* `SerializePacker` using `serialize` and `unserialize`
+* `JsonPacker` using `json_encode` and `json_decode`
+* `NopPacker` does no packing
+* `MongoDBBinaryPacker` using `serialize` and `unserialize` to store as [BSON Binary](http://php.net/manual/en/class.mongodb-bson-binary.php)
 
-Use it if you will you have redis available in your system.
+#### PSR-16 incompatible packers
 
-``` php
-<?php
+The `JsonPacker` does not fully comply with PSR-16, as packing and
+unpacking an object will probably not result in an object of the same class.
 
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\Redis;
+The `NopPacker` is intended when caching string data only (like HTML output) or
+if the caching backend supports structured data. Using it when storing objects
+will might give unexpected results.
 
-$adapter = new Redis();
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
+## Contributors
 
-```
+[![Daniel González](https://avatars1.githubusercontent.com/u/661529?v=3&s=80)](https://github.com/desarrolla2)
+Twitter: [@desarrolla2](https://twitter.com/desarrolla2)\
+[![Arnold Daniels](https://avatars3.githubusercontent.com/u/100821?v=3&s=80)](https://github.com/jasny)
+Twitter: [@ArnoldDaniels](https://twitter.com/ArnoldDaniels)
 
-### Memcache
+[ico-version]: https://img.shields.io/packagist/v/desarrolla2/Cache.svg?style=flat-square
+[ico-pre-release]: https://img.shields.io/packagist/vpre/desarrolla2/Cache.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-travis]: https://img.shields.io/travis/desarrolla2/Cache/master.svg?style=flat-square
+[ico-coveralls]: https://img.shields.io/coveralls/desarrolla2/Cache/master.svg?style=flat-square
+[ico-code-quality]: https://img.shields.io/scrutinizer/g/desarrolla2/cache.svg?style=flat-square
+[ico-sensiolabs]: https://img.shields.io/sensiolabs/i/5f139261-1ac1-4559-846a-723e09319a88.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/desarrolla2/cache.svg?style=flat-square
+[ico-today-downloads]: https://img.shields.io/packagist/dd/desarrolla2/cache.svg?style=flat-square
+[ico-gitter]: https://img.shields.io/badge/GITTER-JOIN%20CHAT%20%E2%86%92-brightgreen.svg?style=flat-square
 
-Use it if you will you have memcache available in your system.
-
-``` php
-<?php
-
-use Desarrolla2\Cache\Cache;
-use Desarrolla2\Cache\Adapter\MemCache;
-
-$adapter = new MemCache();
-$adapter->setOption('ttl', 3600);
-$cache = new Cache($adapter);
-
-```
-
-## Coming soon
-
-This library implements other adapters as soon as possible, feel free to send 
-new adapters if you think it appropriate.
-
-This can be a list of pending tasks.
-
-* Cleaning cache
-* MemcachedAdapter
-* Other Adapters
-
-## Contact
-
-You can contact with me on [@desarrolla2](https://twitter.com/desarrolla2).
+[link-packagist]: https://packagist.org/packages/desarrolla2/cache
+[link-license]: http://hassankhan.mit-license.org
+[link-travis]: https://travis-ci.org/desarrolla2/Cache
+[link-coveralls]: https://coveralls.io/github/desarrolla2/Cache
+[link-code-quality]: https://scrutinizer-ci.com/g/desarrolla2/cache
+[link-sensiolabs]: https://insight.sensiolabs.com/projects/5f139261-1ac1-4559-846a-723e09319a88
+[link-downloads]: https://packagist.org/packages/desarrolla2/cache
+[link-gitter]: https://gitter.im/desarrolla2/Cache?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge
