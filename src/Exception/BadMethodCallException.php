@@ -18,8 +18,8 @@ namespace Desarrolla2\Cache\Exception;
 use Psr\SimpleCache\CacheException as PsrCacheException;
 
 /**
- * Interface used for all types of exceptions thrown by the implementing library.
+ * Exception bad method calls
  */
-class CacheException extends \RuntimeException implements PsrCacheException
+class BadMethodCallException extends \BadMethodCallException implements PsrCacheException
 {
 }
